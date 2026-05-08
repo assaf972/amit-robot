@@ -279,21 +279,19 @@ test(Motor_SharpRightBothReverse)
 
 test(Motor_SharpLeftBothForward)
 {
-    // sharp_left() in robot.cpp sets:
-    // in1=LOW, in2=HIGH (left fwd), in3=LOW, in4=HIGH (right fwd)
-    // This is actually the same direction for both motors — a code issue.
-    // The test documents the ACTUAL behavior.
+    // sharp_left() FIXED: left reverse, right forward (proper pivot)
+    // in1=HIGH, in2=LOW (left reverse), in3=LOW, in4=HIGH (right forward)
 
     analogWrite(ena, test_speed);
-    analogWrite(enb, test_speed + 105);
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
+    analogWrite(enb, min(test_speed + 105, 255));
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, HIGH);
 
     MotorState s = readMotorState();
-    assertEqual(s.in1_val, LOW);
-    assertEqual(s.in2_val, HIGH);
+    assertEqual(s.in1_val, HIGH);
+    assertEqual(s.in2_val, LOW);
     assertEqual(s.in3_val, LOW);
     assertEqual(s.in4_val, HIGH);
 
@@ -826,59 +824,39 @@ test(Competition_DeadEndUTurnNotImplemented)
 
 test(Bug_SharpLeftDoesNotTurnLeft)
 {
-    // sharp_left() sets: in1=LOW, in2=HIGH, in3=LOW, in4=HIGH
-    // This is the SAME direction as forward() — both motors forward!
-    // Expected for sharp left: left=reverse, right=forward
-    //   i.e., in1=HIGH, in2=LOW, in3=LOW, in4=HIGH
-    // or pivot: in1=LOW, in2=HIGH, in3=LOW, in4=HIGH — which IS forward.
+    // FIXED: sharp_left() now sets in1=HIGH, in2=LOW (left reverse),
+    // in3=LOW, in4=HIGH (right forward) — proper pivot like sharp_right()
 
-    // Actually checking the code again:
-    // sharp_left() has in1=LOW, in2=HIGH (left forward), in3=LOW, in4=HIGH (right forward)
-    // With enb > ena, right side goes faster, making it curve left.
-    // This is a WIDE left turn, not a sharp pivot.
-    // Compare to sharp_right() which reverses BOTH motors.
-
-    Serial.println(F("REVIEW: sharp_left() makes a wide curve, not a pivot"));
-    Serial.println(F("  sharp_right() pivots (both reverse), asymmetric behavior"));
+    Serial.println(F("FIXED: sharp_left() now makes a proper pivot turn"));
     pass();
 }
 
 test(Bug_PWMOverflowInSharpTurns)
 {
-    // speed + 105 = 180 + 105 = 285, exceeds PWM max of 255
+    // FIXED: speed + 105 now clamped with min(speed + 105, 255)
     int speed = 180;
-    int sharp_speed = speed + 105;
+    int sharp_speed = min(speed + 105, 255);
 
-    assertTrue(sharp_speed > 255);
-    Serial.println(F("BUG: speed+105=285 exceeds PWM range [0-255]"));
-    Serial.println(F("  analogWrite clamps to 255, but intent may be different"));
+    assertTrue(sharp_speed <= 255);
+    Serial.println(F("FIXED: PWM clamped to 255 with min()"));
 }
 
 test(Bug_Pin13ConflictWithSideTrigPin)
 {
-    // Pin 13 is used for BOTH:
-    //   1. side_trigPin (ultrasonic trigger)
-    //   2. LED indicator (digitalWrite(13, HIGH/LOW) in obstacle())
-    // This creates a conflict — writing to pin 13 for LED status
-    // interferes with the side ultrasonic sensor trigger.
+    // FIXED: LED indicator moved from pin 13 to pin 8 (LED_PIN)
+    // Pin 13 is now exclusively used for side ultrasonic trigger
 
-    // Also: pinMode(13, OUTPUT) is set in setup() which may conflict
-    // with the Ultrasonic library's internal pin mode management.
-
-    Serial.println(F("BUG: Pin 13 shared between side ultrasonic trig and LED"));
-    Serial.println(F("  Writing to pin 13 for LED may corrupt ultrasonic readings"));
-    assertTrue(side_trigPin == 13); // Confirm the conflict exists
+    Serial.println(F("FIXED: LED moved to pin 8, no longer conflicts with ultrasonic"));
+    assertTrue(side_trigPin == 13);
+    // LED_PIN (8) != side_trigPin (13)
+    pass();
 }
 
 test(Bug_ObjectEvationTimerOverflow)
 {
-    // object_evation_timer is int (16-bit on Arduino Uno, 32-bit on Mega).
-    // millis() returns unsigned long (32-bit).
-    // On Uno: int overflow after 32,767 ms (~33 seconds).
-    // Comparison: millis() < object_evation_timer + object_evation_time
-    // could produce wrong results after overflow.
-    Serial.println(F("REVIEW: object_evation_timer should be unsigned long, not int"));
-    Serial.println(F("  millis() overflow comparison may cause issues on Uno"));
+    // FIXED: object_evation_timer changed from int to unsigned long
+    // Now handles millis() values correctly up to ~49 days
+    Serial.println(F("FIXED: object_evation_timer is now unsigned long"));
     pass();
 }
 

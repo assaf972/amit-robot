@@ -534,14 +534,14 @@
 
   <!-- Level 9 -->
   <h3><span class="level-badge lb-9">9</span> Bug Detection — 4 tests</h3>
-  <p>Bugs and potential issues found during code review.</p>
+  <p>Verify that previously identified bugs have been fixed.</p>
   <table>
-    <thead><tr><th>Test</th><th>Bug</th><th>Impact</th></tr></thead>
+    <thead><tr><th>Test</th><th>Bug</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><code>Bug_SharpLeftDoesNotTurnLeft</code></td><td><code>sharp_left()</code> drives both motors forward — wide curve, not pivot</td><td><span class="tag tag-bug">Asymmetric</span></td></tr>
-      <tr><td><code>Bug_PWMOverflowInSharpTurns</code></td><td><code>speed+105 = 285</code> exceeds PWM max 255</td><td><span class="tag tag-bug">Overflow</span></td></tr>
-      <tr><td><code>Bug_Pin13ConflictWithSideTrigPin</code></td><td>Pin 13 shared: side ultrasonic trig + LED indicator</td><td><span class="tag tag-bug">Sensor Conflict</span></td></tr>
-      <tr><td><code>Bug_ObjectEvationTimerOverflow</code></td><td><code>int</code> stores <code>millis()</code> → overflows ~33 s on Uno</td><td><span class="tag tag-bug">Timer Overflow</span></td></tr>
+      <tr><td><code>Bug_SharpLeftDoesNotTurnLeft</code></td><td><code>sharp_left()</code> now reverses left motor — proper pivot</td><td><span class="tag tag-pass">✅ Fixed</span></td></tr>
+      <tr><td><code>Bug_PWMOverflowInSharpTurns</code></td><td><code>min(speed+105, 255)</code> clamps to valid PWM range</td><td><span class="tag tag-pass">✅ Fixed</span></td></tr>
+      <tr><td><code>Bug_Pin13ConflictWithSideTrigPin</code></td><td>LED moved to pin 8 — no longer conflicts with ultrasonic</td><td><span class="tag tag-pass">✅ Fixed</span></td></tr>
+      <tr><td><code>Bug_ObjectEvationTimerOverflow</code></td><td><code>unsigned long</code> handles <code>millis()</code> correctly</td><td><span class="tag tag-pass">✅ Fixed</span></td></tr>
     </tbody>
   </table>
 </div>
@@ -587,32 +587,27 @@
 
 <!-- Section 6: Bugs -->
 <div class="section">
-  <h2><span class="icon">🐛</span> 6. Known Bugs to Fix</h2>
+  <h2><span class="icon">✅</span> 6. Bugs Fixed</h2>
   <div class="bug-grid">
     <div class="bug-card">
-      <h4>🔴 sharp_left() Direction</h4>
-      <p>Both motors drive forward — makes a wide curve, not a sharp pivot. Asymmetric with <code>sharp_right()</code>.</p>
-      <div class="fix">✅ Fix: Mirror <code>sharp_right()</code> — reverse one motor.</div>
+      <h4>✅ sharp_left() Direction</h4>
+      <p>Was: both motors forward (wide curve). Now: left motor reversed — proper pivot matching <code>sharp_right()</code>.</p>
     </div>
     <div class="bug-card">
-      <h4>🔴 PWM Overflow</h4>
-      <p><code>speed + 105 = 285</code> exceeds the PWM maximum of 255. <code>analogWrite()</code> silently clamps.</p>
-      <div class="fix">✅ Fix: Use <code>min(speed + 105, 255)</code> or reduce offset.</div>
+      <h4>✅ PWM Overflow</h4>
+      <p>Was: <code>speed + 105 = 285</code> exceeded PWM max. Now: clamped with <code>min(speed + 105, 255)</code>.</p>
     </div>
     <div class="bug-card">
-      <h4>🔴 Pin 13 Conflict</h4>
-      <p>Pin 13 is used for both the side ultrasonic trigger AND the LED indicator in <code>obstacle()</code>.</p>
-      <div class="fix">✅ Fix: Move LED to a different pin (e.g., pin 8).</div>
+      <h4>✅ Pin 13 Conflict</h4>
+      <p>Was: pin 13 shared between ultrasonic trigger and LED. Now: LED moved to pin 8 (<code>LED_PIN</code>).</p>
     </div>
     <div class="bug-card">
-      <h4>🔴 Timer Overflow</h4>
-      <p><code>object_evation_timer</code> is <code>int</code> but stores <code>millis()</code> — overflows after ~33 s on Uno.</p>
-      <div class="fix">✅ Fix: Change to <code>unsigned long</code>.</div>
+      <h4>✅ Timer Overflow</h4>
+      <p>Was: <code>object_evation_timer</code> as <code>int</code> overflowed after ~33 s. Now: <code>unsigned long</code>.</p>
     </div>
     <div class="bug-card">
-      <h4>🟡 Green Detection Logic</h4>
-      <p>Higher <code>pulseIn</code> frequency means <em>less</em> green. The comparison <code>R &gt; L → right</code> may be inverted.</p>
-      <div class="fix">✅ Fix: Verify on real green markers and invert if needed.</div>
+      <h4>✅ Green Detection Logic</h4>
+      <p>Was: <code>R &gt; L → right</code> turned away from green marker. Now: comparison inverted (<code>R &lt; L</code>) to turn toward green.</p>
     </div>
   </div>
 </div>

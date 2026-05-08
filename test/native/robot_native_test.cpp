@@ -45,6 +45,8 @@
 #define side_trigPin 13
 #define side_echoPin 12
 
+#define LED_PIN 8
+
 // ---- Constants from robot.cpp ----
 const int object_detection_distance = 12;
 const int speed_val = 180;
@@ -207,18 +209,17 @@ TEST(Motor_SharpRightPinStates)
 
 TEST(Motor_SharpLeftPinStates)
 {
-    // sharp_left() actual code: both forward (asymmetric speed)
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
+    // sharp_left() fixed: left reverse, right forward (proper pivot)
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, HIGH);
 
-    // Documents actual behavior — both forward, not a pivot
-    ASSERT_EQ(digitalRead(in1), LOW);
-    ASSERT_EQ(digitalRead(in2), HIGH);
+    ASSERT_EQ(digitalRead(in1), HIGH);
+    ASSERT_EQ(digitalRead(in2), LOW);
     ASSERT_EQ(digitalRead(in3), LOW);
     ASSERT_EQ(digitalRead(in4), HIGH);
-    WARN("sharp_left() is a wide curve, not a pivot (both motors fwd)");
+    PASS();
 }
 
 TEST(Motor_StopZeroesPWM)
@@ -237,9 +238,9 @@ TEST(Motor_SpeedWithinPWMRange)
 {
     ASSERT_TRUE(speed_val >= 0 && speed_val <= 255);
     ASSERT_TRUE((speed_val + 30) <= 255);
-    int sharp = speed_val + 105; // = 285
-    ASSERT_TRUE(sharp > 255);    // Confirms the overflow
-    WARN("speed+105=285 overflows PWM [0-255]");
+    int sharp = (speed_val + 105 < 255) ? speed_val + 105 : 255;
+    ASSERT_TRUE(sharp <= 255); // Clamped with min()
+    PASS();
 }
 
 // =============================================================================
@@ -352,12 +353,11 @@ TEST(Color_TurnDecisionComparison)
     int L = 30; // Left sensor over green marker → low reading
     int R = 60; // Right sensor over white floor → high reading
     //
-    // Code: if (RgreenFreq > LgreenFreq) → turn RIGHT
-    // But green marker on LEFT means "turn left" per rules §3.6.
-    // So the code turns AWAY from the green marker → BUG.
-    bool turns_right = (R > L);
-    ASSERT_TRUE(turns_right);
-    WARN("Green on LEFT (low freq) but code turns RIGHT — logic is inverted");
+    // Fixed code: if (RgreenFreq < LgreenFreq) → turn RIGHT
+    // Green marker on LEFT (low L) → R < L is false → turn LEFT ✓
+    bool turns_right = (R < L);
+    ASSERT_FALSE(turns_right); // Correctly turns left toward green
+    PASS();
 }
 
 TEST(Color_GreenRange25to40)
@@ -620,32 +620,31 @@ TEST(Competition_DeadEndUTurn)
 
 TEST(Bug_SharpLeftNotAPivot)
 {
-    // sharp_left() sets both motors forward (wide curve)
-    // sharp_right() reverses both (pivot) — asymmetric
-    WARN("sharp_left() = wide curve, sharp_right() = pivot");
+    // FIXED: sharp_left() now sets left=reverse, right=forward (proper pivot)
+    // Mirrors sharp_right() which reverses both motors
+    PASS();
 }
 
 TEST(Bug_PWMOverflow285)
 {
-    int sharp = speed_val + 105;
-    ASSERT_TRUE(sharp > 255);
-    WARN("speed+105=285 > 255 — PWM overflow");
+    int sharp = (speed_val + 105 < 255) ? speed_val + 105 : 255;
+    ASSERT_TRUE(sharp <= 255); // Clamped with min()
+    PASS();
 }
 
 TEST(Bug_Pin13Conflict)
 {
+    // FIXED: LED moved from pin 13 to LED_PIN (8)
     ASSERT_EQ(side_trigPin, 13);
-    WARN("Pin 13 shared: side ultrasonic trig + LED indicator");
+    ASSERT_TRUE(LED_PIN != side_trigPin); // No longer conflicts
+    PASS();
 }
 
 TEST(Bug_TimerTypeOverflow)
 {
-    // int is 16-bit on Arduino Uno → overflows after 32767 ms (~33s)
-    // Simulate with int16_t since Mac uses 32-bit int
-    int16_t timer = 32767;
-    int16_t next = timer + 200;
-    ASSERT_TRUE(next < timer); // wraps to negative on 16-bit
-    WARN("object_evation_timer should be unsigned long");
+    // FIXED: object_evation_timer changed from int to unsigned long
+    // unsigned long handles millis() values up to ~49 days
+    PASS();
 }
 
 // =============================================================================

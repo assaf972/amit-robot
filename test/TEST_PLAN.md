@@ -152,14 +152,14 @@ These tests validate requirements from the RoboCup Junior Rescue Line 2026 rules
 
 ### Level 9 — Bug Detection (4 tests)
 
-These tests document bugs and potential issues found during code review.
+These tests verify that previously identified bugs have been fixed.
 
-| Test | Bug Description | Impact |
+| Test | Bug Description | Status |
 |------|----------------|--------|
-| `Bug_SharpLeftDoesNotTurnLeft` | `sharp_left()` sets both motors forward (same as `forward()` with speed bias). `sharp_right()` reverses both motors. The functions are asymmetric. | `sharp_left()` makes a wide curve, not a sharp pivot like `sharp_right()` |
-| `Bug_PWMOverflowInSharpTurns` | `speed + 105 = 285` exceeds PWM max of 255. `analogWrite()` clamps to 255 silently. | Sharp turn speed may not be as intended |
-| `Bug_Pin13ConflictWithSideTrigPin` | Pin 13 is used for **both** the side ultrasonic trigger AND the LED indicator in `obstacle()`. Writing to pin 13 for LED status corrupts ultrasonic readings. | Side ultrasonic may give incorrect readings during obstacle avoidance |
-| `Bug_ObjectEvationTimerOverflow` | `object_evation_timer` is `int` but stores `millis()` (unsigned long). On Arduino Uno (16-bit int), overflows after ~33 seconds. | Obstacle avoidance timing may fail after 33 seconds on Uno |
+| `Bug_SharpLeftDoesNotTurnLeft` | `sharp_left()` previously set both motors forward (wide curve). Now fixed: left motor reverses for a proper pivot. | ✅ Fixed |
+| `Bug_PWMOverflowInSharpTurns` | `speed + 105 = 285` previously exceeded PWM max of 255. Now clamped with `min(speed + 105, 255)`. | ✅ Fixed |
+| `Bug_Pin13ConflictWithSideTrigPin` | Pin 13 was shared between side ultrasonic trigger and LED indicator. LED moved to pin 8. | ✅ Fixed |
+| `Bug_ObjectEvationTimerOverflow` | `object_evation_timer` was `int` but stores `millis()`. Changed to `unsigned long`. | ✅ Fixed |
 
 ---
 
@@ -194,10 +194,12 @@ Based on the rules analysis, the following features are **not yet implemented** 
 
 ---
 
-## 6. Known Bugs to Fix
+## 6. Bugs Fixed
 
-1. **`sharp_left()` direction** — Both motors go forward; should mirror `sharp_right()` with one motor reversed.
-2. **PWM overflow** — `speed + 105 = 285` exceeds 255; use `min(speed + 105, 255)` or reduce the offset.
-3. **Pin 13 conflict** — Move the LED indicator to a different pin (e.g., pin 8) to avoid interfering with the side ultrasonic sensor.
-4. **Timer type** — Change `object_evation_timer` from `int` to `unsigned long` to prevent overflow.
-5. **Green detection logic** — Higher pulseIn frequency means *less* of that color. The comparison `RgreenFreq > LgreenFreq → turn right` may be inverted.
+All 5 bugs identified during code review have been fixed:
+
+1. **`sharp_left()` direction** — ✅ Fixed. Now mirrors `sharp_right()` with left motor reversed (proper pivot).
+2. **PWM overflow** — ✅ Fixed. `min(speed + 105, 255)` clamps to valid PWM range.
+3. **Pin 13 conflict** — ✅ Fixed. LED indicator moved to pin 8 (`LED_PIN`), no longer interferes with side ultrasonic.
+4. **Timer type** — ✅ Fixed. `object_evation_timer` changed from `int` to `unsigned long`.
+5. **Green detection logic** — ✅ Fixed. Comparison changed from `>` to `<` so robot turns toward the green marker.

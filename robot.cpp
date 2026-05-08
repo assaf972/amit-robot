@@ -31,12 +31,14 @@
 #define side_trigPin 13
 #define side_echoPin 12
 
+#define LED_PIN 8
+
 Ultrasonic ultrasonic_front(front_trigPin, front_echoPin);
 Ultrasonic ultrasonic_side(side_trigPin, side_echoPin);
 
 const int object_detection_distance = 12; // cm
 
-int object_evation_timer = 0;
+unsigned long object_evation_timer = 0;
 const int object_evation_time = 200;
 
 int LgreenFrequency = 0;
@@ -61,7 +63,7 @@ void setup()
   pinMode(in3, OUTPUT);
   pinMode(in4, OUTPUT);
   pinMode(enb, OUTPUT);
-  pinMode(13, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 
   pinMode(LS, INPUT);
   pinMode(MS, INPUT);
@@ -90,7 +92,7 @@ void sharp_right()
 
   // Serial.print("sharp right");
 
-  analogWrite(ena, 255);
+  analogWrite(ena, min(speed + 105, 255));
   analogWrite(enb, speed);
 
   digitalWrite(in1, HIGH);
@@ -136,9 +138,9 @@ void sharp_left()
   // Serial.print("sharp left");
 
   analogWrite(ena, speed);
-  analogWrite(enb, 255);
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
+  analogWrite(enb, min(speed + 105, 255));
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
 
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH);
@@ -151,7 +153,7 @@ void stop()
 
 void obstacle()
 {
-  digitalWrite(13, HIGH);
+  digitalWrite(LED_PIN, HIGH);
   stop();
   delay(1000);
 
@@ -171,7 +173,7 @@ void obstacle()
     if (millis() < object_evation_timer + object_evation_time)
     {
       forward();
-      digitalWrite(13, HIGH);
+      digitalWrite(LED_PIN, HIGH);
       Serial.println(millis());
     }
     else
@@ -190,7 +192,7 @@ void obstacle()
 
       while (distance > object_detection_distance + 30)
       {
-        digitalWrite(13, LOW);
+        digitalWrite(LED_PIN, LOW);
         sharp_right();
         distance = ultrasonic_side.read();
         if (distance == 0)
@@ -226,7 +228,7 @@ void node()
   if (digitalRead(LS) == HIGH && digitalRead(MS) == LOW && digitalRead(RS) == HIGH)
   {
     forward();
-    digitalWrite(13, HIGH);
+    digitalWrite(LED_PIN, HIGH);
   }
 
   if (digitalRead(LS) == HIGH && digitalRead(RS) == LOW)
@@ -240,9 +242,10 @@ void node()
   }
   if (digitalRead(LS) == LOW && digitalRead(MS) == LOW && digitalRead(RS) == LOW)
   {
+
     stop();
     // 2. Read LGreeUn Photodiodes
-    digitalWrite(LS2, HIGH); // select green filter
+    digitalWrite(LS2, HIGH);
     digitalWrite(LS3, HIGH);
     LgreenFrequency = pulseIn(LOUT, LOW, 30000);
     Serial.print("LG= ");
@@ -257,7 +260,7 @@ void node()
     Serial.print(RgreenFrequency);
     Serial.println("  ");
 
-    if (RgreenFrequency > LgreenFrequency)
+    if (RgreenFrequency < LgreenFrequency)
     {
       Serial.println("right");
       right();
