@@ -240,10 +240,9 @@ void node()
   }
   if (digitalRead(LS) == LOW && digitalRead(MS) == LOW && digitalRead(RS) == LOW)
   {
-
     stop();
     // 2. Read LGreeUn Photodiodes
-    digitalWrite(LS2, HIGH);
+    digitalWrite(LS2, HIGH); // select green filter
     digitalWrite(LS3, HIGH);
     LgreenFrequency = pulseIn(LOUT, LOW, 30000);
     Serial.print("LG= ");
