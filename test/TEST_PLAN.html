@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Test Plan — RoboCup Junior Rescue Line 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232730;
+    --border: #2e3340;
+    --text: #e1e4ed;
+    --text-dim: #8b90a0;
+    --accent: #6c8dfa;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --orange: #fbbf24;
+    --cyan: #22d3ee;
+    --pink: #f472b6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #0c1220 100%);
+    padding: 60px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(108,141,250,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(167,139,250,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6c8dfa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    position: relative;
+  }
+  .hero .badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    background: rgba(108,141,250,0.15);
+    border: 1px solid rgba(108,141,250,0.3);
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    position: relative;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 30px; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .stat-card .number {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-card .label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stat-card:nth-child(1) .number { color: var(--accent); }
+  .stat-card:nth-child(2) .number { color: var(--green); }
+  .stat-card:nth-child(3) .number { color: var(--orange); }
+  .stat-card:nth-child(4) .number { color: var(--red); }
+
+  /* Sections */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+  .section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section h2 .icon { font-size: 1.3rem; }
+  .section h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 24px 0 12px 0;
+    color: var(--accent2);
+  }
+  p, li { color: var(--text); font-size: 0.95rem; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.88rem;
+  }
+  thead th {
+    background: var(--surface2);
+    color: var(--text);
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:hover { background: rgba(108,141,250,0.04); }
+  code {
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    color: var(--cyan);
+  }
+
+  /* Chart containers */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+  }
+  .chart-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .chart-box h4 {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .chart-box canvas { max-height: 300px; }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .tag-pass { background: rgba(52,211,153,0.15); color: var(--green); }
+  .tag-fail { background: rgba(248,113,113,0.15); color: var(--red); }
+  .tag-warn { background: rgba(251,191,36,0.15); color: var(--orange); }
+  .tag-info { background: rgba(108,141,250,0.15); color: var(--accent); }
+  .tag-miss { background: rgba(244,114,182,0.15); color: var(--pink); }
+  .tag-bug  { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+
+  /* Level badge */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .lb-1 { background: linear-gradient(135deg, #6366f1, #818cf8); }
+  .lb-2 { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+  .lb-3 { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
+  .lb-4 { background: linear-gradient(135deg, #10b981, #34d399); }
+  .lb-5 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+  .lb-6 { background: linear-gradient(135deg, #f97316, #fb923c); }
+  .lb-7 { background: linear-gradient(135deg, #ef4444, #f87171); }
+  .lb-8 { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .lb-9 { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+
+  /* Callout */
+  .callout {
+    border-left: 4px solid;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .callout-warn { border-color: var(--orange); background: rgba(251,191,36,0.06); }
+  .callout-danger { border-color: var(--red); background: rgba(248,113,113,0.06); }
+  .callout-info { border-color: var(--accent); background: rgba(108,141,250,0.06); }
+  .callout strong { display: block; margin-bottom: 4px; }
+
+  /* Steps */
+  .steps {
+    counter-reset: step;
+    list-style: none;
+    padding-left: 0;
+  }
+  .steps li {
+    counter-increment: step;
+    padding-left: 44px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* Bug cards */
+  .bug-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .bug-card {
+    background: var(--surface2);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .bug-card h4 {
+    color: var(--red);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bug-card p { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px; }
+  .bug-card .fix {
+    font-size: 0.82rem;
+    color: var(--green);
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .bug-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.8rem; }
+    .container { padding: 20px 16px; }
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>🤖 Robot Test Plan</h1>
+  <div class="subtitle">RoboCup Junior Rescue Line 2026</div>
+  <div class="badge">50 Tests · 9 Levels · AUnit Framework</div>
+</div>
+
+<div class="container">
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="number">50</div>
+    <div class="label">Total Tests</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">9</div>
+    <div class="label">Test Levels</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">5</div>
+    <div class="label">Bugs Found</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">5</div>
+    <div class="label">Missing Features</div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="section">
+  <h2><span class="icon">📊</span> Test Distribution &amp; Coverage</h2>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h4>Tests per Level</h4>
+      <canvas id="chartTestsPerLevel"></canvas>
+    </div>
+    <div class="chart-box">
+      <h4>Test Category Breakdown</h4>
+      <canvas id="chartDoughnut"></canvas>
+    </div>
+    <div class="chart-box">
+      <h4>Hardware Dependency</h4>
+      <canvas id="chartHardware"></canvas>
+    </div>
+    <div class="chart-box">
+      <h4>Competition Feature Coverage</h4>
+      <canvas id="chartCoverage"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: Overview -->
+<div class="section">
+  <h2><span class="icon">📋</span> 1. Overview</h2>
+  <p>This document describes the comprehensive test plan for the line-following rescue robot built for the
+     <strong>RoboCup Junior Rescue Line 2026</strong> competition. The tests are implemented in
+     <strong>AUnit</strong> (an Arduino-native testing framework) and cover all code layers from pin
+     configuration through competition-level integration.</p>
+  <p>Test file: <code>test/robot_test.ino</code></p>
+</div>
+
+<!-- Section 2: Tools -->
+<div class="section">
+  <h2><span class="icon">🔧</span> 2. Testing Framework &amp; Tools</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AUnit</strong> (Brian T. Park)</td><td>Arduino-compatible xUnit testing framework. Install via Arduino Library Manager.</td></tr>
+      <tr><td><strong>Arduino IDE / CLI</strong></td><td>Compile and upload test sketch to the board</td></tr>
+      <tr><td><strong>Serial Monitor</strong> (9600 baud)</td><td>View test results (PASS / FAIL / SKIP for each test)</td></tr>
+      <tr><td><strong>Physical test fixtures</strong></td><td>Black electrical tape on white surface, green markers (25×25 mm), obstacles, ultrasonic targets</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How to Run</h3>
+  <ol class="steps">
+    <li>Open Arduino IDE → <strong>Sketch &gt; Include Library &gt; Manage Libraries</strong> → search <em>"AUnit"</em> → Install.</li>
+    <li>Open <code>test/robot_test.ino</code>.</li>
+    <li>Select the correct board (<strong>Arduino Mega</strong>) and port.</li>
+    <li>Upload to the robot.</li>
+    <li>Open Serial Monitor at <strong>9600 baud</strong>.</li>
+    <li>Results print as each test runs: <code>TestName | PASSED</code> or <code>TestName | FAILED</code>.</li>
+  </ol>
+
+  <div class="callout callout-warn">
+    <strong>⚠️ Safety Warning</strong>
+    For motor tests, place the robot on a raised platform or remove the wheels. Motors <strong>will</strong> spin briefly during testing.
+  </div>
+</div>
+
+<!-- Section 3: Test Levels -->
+<div class="section">
+  <h2><span class="icon">🧪</span> 3. Test Levels &amp; Descriptions</h2>
+
+  <!-- Level 1 -->
+  <h3><span class="level-badge lb-1">1</span> Hardware Integration &amp; Pin Configuration — 5 tests</h3>
+  <p>Verify that <code>setup()</code> correctly configures all hardware pins. No physical interaction required beyond powering on.</p>
+  <table>
+    <thead><tr><th>Test</th><th>What it verifies</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>HW_MotorPinsConfiguredAsOutput</code></td><td>Motor pins accept output writes</td><td>Writes LOW to all motor pins; no crash = correct</td></tr>
+      <tr><td><code>HW_LineSensorPinsConfiguredAsInput</code></td><td>IR sensor pins configured as INPUT</td><td>Reads all 3 pins, asserts HIGH or LOW</td></tr>
+      <tr><td><code>HW_ColorSensorFrequencyScalingSetTo20Percent</code></td><td>TCS S0/S1 frequency scaling</td><td>Reads pin states: LS0=HIGH, LS1=LOW, RS0=HIGH, RS1=LOW</td></tr>
+      <tr><td><code>HW_SerialInitializedAt9600Baud</code></td><td>Serial communication is active</td><td>Asserts <code>Serial</code> evaluates to true</td></tr>
+      <tr><td><code>HW_UltrasonicSensorPinsConfigured</code></td><td>Ultrasonic pins wired &amp; responsive</td><td>Reads both sensors, asserts non-negative distance</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 2 -->
+  <h3><span class="level-badge lb-2">2</span> Motor &amp; Steering Control — 8 tests</h3>
+  <p>Verify each movement function produces the correct H-bridge pin states. Validates motor direction, speed symmetry, PWM range.</p>
+  <table>
+    <thead><tr><th>Test</th><th>What it verifies</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>Motor_ForwardBothMotorsSameDirection</code></td><td><code>forward()</code> drives both motors forward</td><td>in1=LOW, in2=HIGH, in3=LOW, in4=HIGH</td></tr>
+      <tr><td><code>Motor_ForwardSymmetricSpeed</code></td><td>Both motors get equal PWM</td><td>Speed within [0, 255]</td></tr>
+      <tr><td><code>Motor_RightTurnLeftForwardRightReverse</code></td><td><code>right()</code> steers right</td><td>Left fwd, right reverse</td></tr>
+      <tr><td><code>Motor_LeftTurnLeftReverseRightForward</code></td><td><code>left()</code> steers left</td><td>Left reverse, right fwd</td></tr>
+      <tr><td><code>Motor_SharpRightBothReverse</code></td><td><code>sharp_right()</code> pivots CW</td><td>Both motors reverse</td></tr>
+      <tr><td><code>Motor_SharpLeftBothForward</code></td><td><code>sharp_left()</code> actual behavior</td><td>Both motors fwd (asymmetric speed) — <span class="tag tag-warn">Wide Curve</span></td></tr>
+      <tr><td><code>Motor_StopBothMotorsZeroSpeed</code></td><td><code>stop()</code> zeroes PWM</td><td>analogWrite(0) on both</td></tr>
+      <tr><td><code>Motor_SpeedWithinPWMRange</code></td><td>PWM values within [0–255]</td><td>Base=180 ✓, Turn=210 ✓, Sharp=<span class="tag tag-fail">285 Overflow!</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 3 -->
+  <h3><span class="level-badge lb-3">3</span> Line Sensor Management — 5 tests</h3>
+  <p>Verify IR reflectance sensor readings. <strong>Requires physical positioning of the robot.</strong></p>
+  <table>
+    <thead><tr><th>Test</th><th>Setup Required</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>LineSensor_AllSensorsRespondToWhiteSurface</code></td><td>Robot on white surface</td><td>All sensors → HIGH</td></tr>
+      <tr><td><code>LineSensor_MiddleSensorDetectsBlackLine</code></td><td>Centered on 1–2 cm black line</td><td>MS → LOW</td></tr>
+      <tr><td><code>LineSensor_LeftSensorDetectsBlackLine</code></td><td>Left sensor over line</td><td>LS → LOW</td></tr>
+      <tr><td><code>LineSensor_RightSensorDetectsBlackLine</code></td><td>Right sensor over line</td><td>RS → LOW</td></tr>
+      <tr><td><code>LineSensor_AllLowAtIntersection</code></td><td>Robot on intersection</td><td>All sensors → LOW</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 4 -->
+  <h3><span class="level-badge lb-4">4</span> Color Sensor — Green Marker Detection — 4 tests</h3>
+  <p>Per rules §3.6: Green markers (25×25 mm) at junctions indicate the correct path. TCS sensors detect green via frequency.</p>
+  <table>
+    <thead><tr><th>Test</th><th>What it verifies</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>ColorSensor_LeftGreenFrequencyReading</code></td><td>Left sensor produces valid reading</td><td>S2=HIGH, S3=HIGH → <code>pulseIn()</code> &gt; 0</td></tr>
+      <tr><td><code>ColorSensor_RightGreenFrequencyReading</code></td><td>Right sensor valid reading</td><td>Same for right sensor</td></tr>
+      <tr><td><code>ColorSensor_GreenDetectionThreshold</code></td><td>Green surface → freq in [25–40]</td><td>Reports if within detection range</td></tr>
+      <tr><td><code>ColorSensor_TurnDecisionLogic</code></td><td>Junction turn direction logic</td><td>R&gt;L → right. <span class="tag tag-warn">May be inverted</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 5 -->
+  <h3><span class="level-badge lb-5">5</span> Ultrasonic Sensor — Obstacle Detection — 6 tests</h3>
+  <p>Per rules §3.5: Obstacles ≥ 15 cm tall. Detection distance = 12 cm.</p>
+  <table>
+    <thead><tr><th>Test</th><th>What it verifies</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>Ultrasonic_FrontSensorReturnsValidReading</code></td><td>Front sensor connected</td><td>Distance ≥ 0</td></tr>
+      <tr><td><code>Ultrasonic_SideSensorReturnsValidReading</code></td><td>Side sensor connected</td><td>Distance ≥ 0</td></tr>
+      <tr><td><code>Ultrasonic_FrontDetectsCloseObject</code></td><td>Object at ~10 cm triggers</td><td>0 &lt; distance &lt; 12</td></tr>
+      <tr><td><code>Ultrasonic_FrontNoObjectFarReading</code></td><td>Clear path = no trigger</td><td>Distance ≥ 12 or 0</td></tr>
+      <tr><td><code>Ultrasonic_ZeroReadingHandledCorrectly</code></td><td>No echo → 357 fallback</td><td><code>if (d==0) d=357</code></td></tr>
+      <tr><td><code>Ultrasonic_DetectionThresholdIs12cm</code></td><td>Constant = 12 cm</td><td>Within [5–30 cm] range</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 6 -->
+  <h3><span class="level-badge lb-6">6</span> Line Following Logic — 5 tests</h3>
+  <p>Verify the <code>node()</code> decision tree through pure logic assertions — no hardware needed.</p>
+  <table>
+    <thead><tr><th>Test</th><th>Sensor State</th><th>Expected Action</th></tr></thead>
+    <tbody>
+      <tr><td><code>Logic_CenteredOnLine_GoesForward</code></td><td>LS=H, MS=L, RS=H</td><td><code>forward()</code></td></tr>
+      <tr><td><code>Logic_DriftedRight_TurnsRight</code></td><td>LS=H, RS=L</td><td><code>right()</code></td></tr>
+      <tr><td><code>Logic_DriftedLeft_TurnsLeft</code></td><td>LS=L, RS=H</td><td><code>left()</code></td></tr>
+      <tr><td><code>Logic_AllLow_IntersectionDetected</code></td><td>LS=L, MS=L, RS=L</td><td>Read color sensors → decide</td></tr>
+      <tr><td><code>Logic_AllHigh_OffLine</code></td><td>LS=H, MS=H, RS=H</td><td>Obstacle avoidance mode</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 7 -->
+  <h3><span class="level-badge lb-7">7</span> Obstacle Avoidance Logic — 6 tests</h3>
+  <p>Verify the <code>obstacle()</code> function's decision logic for navigating around obstacles.</p>
+  <table>
+    <thead><tr><th>Test</th><th>What it verifies</th><th>Logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>Obstacle_TriggerDistance</code></td><td>Triggers at &lt; 12 cm</td><td>d=10 → trigger</td></tr>
+      <tr><td><code>Obstacle_NoTriggerWhenFar</code></td><td>No trigger at &gt; 12 cm</td><td>d=50 → no trigger</td></tr>
+      <tr><td><code>Obstacle_NoTriggerOnZeroReading</code></td><td>Zero → safe fallback</td><td>0 → 357 → no trigger</td></tr>
+      <tr><td><code>Obstacle_SideDistanceThresholdForRealignment</code></td><td>Turn at side &gt; 42 cm</td><td>detection + 30 = 42</td></tr>
+      <tr><td><code>Obstacle_TimerBasedForwardBursts</code></td><td>Bursts = 200 ms</td><td>Timing constant check</td></tr>
+      <tr><td><code>Obstacle_RejoinsLineWhenSensorDetectsBlack</code></td><td>Exit when line found</td><td>Any sensor LOW → exit loop</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 8 -->
+  <h3><span class="level-badge lb-8">8</span> Competition Rule Compliance — 7 tests</h3>
+  <p>Validate requirements from the RoboCup Junior Rescue Line 2026 rules.</p>
+  <table>
+    <thead><tr><th>Test</th><th>Rule</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><code>Competition_RobotIsFullyAutonomous</code></td><td>§4.1</td><td><span class="tag tag-pass">Pass</span></td></tr>
+      <tr><td><code>Competition_GameTimeLimit8Minutes</code></td><td>§5.7</td><td><span class="tag tag-warn">Missing auto-stop</span></td></tr>
+      <tr><td><code>Competition_ObstacleDetectionDistance</code></td><td>§3.5</td><td><span class="tag tag-pass">Pass</span></td></tr>
+      <tr><td><code>Competition_LineWidth1to2cm</code></td><td>§3.3.1</td><td><span class="tag tag-info">Manual check</span></td></tr>
+      <tr><td><code>Competition_GapHandlingRequired</code></td><td>§3.3.2</td><td><span class="tag tag-miss">Not implemented</span></td></tr>
+      <tr><td><code>Competition_RampHandlingRequired</code></td><td>§3.7</td><td><span class="tag tag-info">Manual check</span></td></tr>
+      <tr><td><code>Competition_DeadEndUTurnNotImplemented</code></td><td>§3.6.4</td><td><span class="tag tag-miss">Not implemented</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Level 9 -->
+  <h3><span class="level-badge lb-9">9</span> Bug Detection — 4 tests</h3>
+  <p>Bugs and potential issues found during code review.</p>
+  <table>
+    <thead><tr><th>Test</th><th>Bug</th><th>Impact</th></tr></thead>
+    <tbody>
+      <tr><td><code>Bug_SharpLeftDoesNotTurnLeft</code></td><td><code>sharp_left()</code> drives both motors forward — wide curve, not pivot</td><td><span class="tag tag-bug">Asymmetric</span></td></tr>
+      <tr><td><code>Bug_PWMOverflowInSharpTurns</code></td><td><code>speed+105 = 285</code> exceeds PWM max 255</td><td><span class="tag tag-bug">Overflow</span></td></tr>
+      <tr><td><code>Bug_Pin13ConflictWithSideTrigPin</code></td><td>Pin 13 shared: side ultrasonic trig + LED indicator</td><td><span class="tag tag-bug">Sensor Conflict</span></td></tr>
+      <tr><td><code>Bug_ObjectEvationTimerOverflow</code></td><td><code>int</code> stores <code>millis()</code> → overflows ~33 s on Uno</td><td><span class="tag tag-bug">Timer Overflow</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Section 4: Summary -->
+<div class="section">
+  <h2><span class="icon">📈</span> 4. Test Summary</h2>
+  <table>
+    <thead><tr><th>Level</th><th>Category</th><th>Tests</th><th>Hardware Required</th></tr></thead>
+    <tbody>
+      <tr><td><span class="level-badge lb-1">1</span></td><td>Pin Configuration &amp; HW Integration</td><td>5</td><td>Power only</td></tr>
+      <tr><td><span class="level-badge lb-2">2</span></td><td>Motor &amp; Steering Control</td><td>8</td><td>Wheels removed / elevated</td></tr>
+      <tr><td><span class="level-badge lb-3">3</span></td><td>Line Sensor Management</td><td>5</td><td>Black tape on white surface</td></tr>
+      <tr><td><span class="level-badge lb-4">4</span></td><td>Color Sensor (Green Detection)</td><td>4</td><td>Green markers (25×25 mm)</td></tr>
+      <tr><td><span class="level-badge lb-5">5</span></td><td>Ultrasonic Sensors</td><td>6</td><td>Objects at known distances</td></tr>
+      <tr><td><span class="level-badge lb-6">6</span></td><td>Line Following Logic</td><td>5</td><td>None (pure logic)</td></tr>
+      <tr><td><span class="level-badge lb-7">7</span></td><td>Obstacle Avoidance Logic</td><td>6</td><td>None (pure logic)</td></tr>
+      <tr><td><span class="level-badge lb-8">8</span></td><td>Competition Compliance</td><td>7</td><td>Manual review</td></tr>
+      <tr><td><span class="level-badge lb-9">9</span></td><td>Bug Detection</td><td>4</td><td>None (code review)</td></tr>
+      <tr style="font-weight:700; border-top:2px solid var(--border)"><td></td><td>Total</td><td>50</td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Section 5: Missing Features -->
+<div class="section">
+  <h2><span class="icon">⚠️</span> 5. Missing Features for Competition</h2>
+  <div class="callout callout-danger">
+    <strong>Critical Gap</strong>
+    The following features are not yet implemented and will cost significant competition points.
+  </div>
+  <table>
+    <thead><tr><th>Feature</th><th>Rule</th><th>Points</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Gap handling (up to 20 cm)</td><td>§3.3.2</td><td>10 pts/tile</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>Speed bump handling</td><td>§3.5.1</td><td>10 pts/tile</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>Dead-end U-turn (double green)</td><td>§3.6.4</td><td>10 pts</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>Ramp navigation (≤ 25°)</td><td>§3.7</td><td>10 pts/tile</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>8-minute game timer</td><td>§5.7</td><td>Auto-stop</td><td><span class="tag tag-miss">Missing</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Section 6: Bugs -->
+<div class="section">
+  <h2><span class="icon">🐛</span> 6. Known Bugs to Fix</h2>
+  <div class="bug-grid">
+    <div class="bug-card">
+      <h4>🔴 sharp_left() Direction</h4>
+      <p>Both motors drive forward — makes a wide curve, not a sharp pivot. Asymmetric with <code>sharp_right()</code>.</p>
+      <div class="fix">✅ Fix: Mirror <code>sharp_right()</code> — reverse one motor.</div>
+    </div>
+    <div class="bug-card">
+      <h4>🔴 PWM Overflow</h4>
+      <p><code>speed + 105 = 285</code> exceeds the PWM maximum of 255. <code>analogWrite()</code> silently clamps.</p>
+      <div class="fix">✅ Fix: Use <code>min(speed + 105, 255)</code> or reduce offset.</div>
+    </div>
+    <div class="bug-card">
+      <h4>🔴 Pin 13 Conflict</h4>
+      <p>Pin 13 is used for both the side ultrasonic trigger AND the LED indicator in <code>obstacle()</code>.</p>
+      <div class="fix">✅ Fix: Move LED to a different pin (e.g., pin 8).</div>
+    </div>
+    <div class="bug-card">
+      <h4>🔴 Timer Overflow</h4>
+      <p><code>object_evation_timer</code> is <code>int</code> but stores <code>millis()</code> — overflows after ~33 s on Uno.</p>
+      <div class="fix">✅ Fix: Change to <code>unsigned long</code>.</div>
+    </div>
+    <div class="bug-card">
+      <h4>🟡 Green Detection Logic</h4>
+      <p>Higher <code>pulseIn</code> frequency means <em>less</em> green. The comparison <code>R &gt; L → right</code> may be inverted.</p>
+      <div class="fix">✅ Fix: Verify on real green markers and invert if needed.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  RoboCup Junior Rescue Line 2026 · Robot Test Plan · Generated May 2026
+</div>
+
+<script>
+// Color palette
+const colors = {
+  bar: [
+    'rgba(99,102,241,0.85)',  // indigo
+    'rgba(59,130,246,0.85)',  // blue
+    'rgba(6,182,212,0.85)',   // cyan
+    'rgba(16,185,129,0.85)',  // emerald
+    'rgba(245,158,11,0.85)',  // amber
+    'rgba(249,115,22,0.85)',  // orange
+    'rgba(239,68,68,0.85)',   // red
+    'rgba(236,72,153,0.85)',  // pink
+    'rgba(139,92,246,0.85)',  // purple
+  ],
+  barBorder: [
+    '#6366f1','#3b82f6','#06b6d4','#10b981',
+    '#f59e0b','#f97316','#ef4444','#ec4899','#8b5cf6'
+  ]
+};
+
+Chart.defaults.color = '#8b90a0';
+Chart.defaults.borderColor = 'rgba(46,51,64,0.6)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+// 1. Tests per Level - Bar Chart
+new Chart(document.getElementById('chartTestsPerLevel'), {
+  type: 'bar',
+  data: {
+    labels: ['L1 HW', 'L2 Motor', 'L3 Line', 'L4 Color', 'L5 Ultra', 'L6 Logic', 'L7 Obst', 'L8 Comp', 'L9 Bugs'],
+    datasets: [{
+      label: 'Tests',
+      data: [5, 8, 5, 4, 6, 5, 6, 7, 4],
+      backgroundColor: colors.bar,
+      borderColor: colors.barBorder,
+      borderWidth: 2,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a1d27',
+        borderColor: '#2e3340',
+        borderWidth: 1,
+        titleColor: '#e1e4ed',
+        bodyColor: '#8b90a0',
+        padding: 12,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 2 },
+        grid: { color: 'rgba(46,51,64,0.4)' }
+      },
+      x: {
+        grid: { display: false }
+      }
+    }
+  }
+});
+
+// 2. Doughnut - Category Breakdown
+new Chart(document.getElementById('chartDoughnut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Hardware Integration', 'Motor & Steering', 'Sensors', 'Logic & Algorithms', 'Competition', 'Bug Detection'],
+    datasets: [{
+      data: [5, 8, 15, 11, 7, 4],
+      backgroundColor: [
+        'rgba(99,102,241,0.8)',
+        'rgba(59,130,246,0.8)',
+        'rgba(6,182,212,0.8)',
+        'rgba(245,158,11,0.8)',
+        'rgba(236,72,153,0.8)',
+        'rgba(239,68,68,0.8)'
+      ],
+      borderColor: '#1a1d27',
+      borderWidth: 3,
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '60%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } }
+      }
+    }
+  }
+});
+
+// 3. Hardware Dependency - Horizontal Bar
+new Chart(document.getElementById('chartHardware'), {
+  type: 'bar',
+  data: {
+    labels: ['No Hardware (Logic)', 'Power Only', 'Sensors Needed', 'Full Robot Setup'],
+    datasets: [{
+      label: 'Tests',
+      data: [15, 5, 15, 15],
+      backgroundColor: [
+        'rgba(16,185,129,0.8)',
+        'rgba(59,130,246,0.8)',
+        'rgba(245,158,11,0.8)',
+        'rgba(236,72,153,0.8)'
+      ],
+      borderColor: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899'],
+      borderWidth: 2,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#1a1d27', borderColor: '#2e3340', borderWidth: 1, padding: 12, cornerRadius: 8 }
+    },
+    scales: {
+      x: { beginAtZero: true, grid: { color: 'rgba(46,51,64,0.4)' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// 4. Competition Coverage - Radar
+new Chart(document.getElementById('chartCoverage'), {
+  type: 'radar',
+  data: {
+    labels: ['Line Following', 'Junctions', 'Obstacles', 'Gaps', 'Ramps', 'Dead-end U-turn', 'Timer'],
+    datasets: [{
+      label: 'Implemented',
+      data: [100, 60, 80, 0, 10, 0, 0],
+      backgroundColor: 'rgba(52,211,153,0.15)',
+      borderColor: '#34d399',
+      borderWidth: 2,
+      pointBackgroundColor: '#34d399',
+      pointRadius: 4
+    }, {
+      label: 'Required (100%)',
+      data: [100, 100, 100, 100, 100, 100, 100],
+      backgroundColor: 'rgba(248,113,113,0.05)',
+      borderColor: 'rgba(248,113,113,0.3)',
+      borderWidth: 1,
+      borderDash: [4, 4],
+      pointRadius: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      r: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { stepSize: 25, display: false },
+        grid: { color: 'rgba(46,51,64,0.5)' },
+        angleLines: { color: 'rgba(46,51,64,0.5)' },
+        pointLabels: { font: { size: 10 }, color: '#8b90a0' }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
